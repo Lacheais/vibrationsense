@@ -1,0 +1,40 @@
+
+channelID = 2549509; %{channelID found in API KEYS}
+
+alertApiKey = 'TAK+o0S65JNtOAv+OMh'; %{alertAPIKEY found in API KEYS}
+
+alertUrl="https://api.thingspeak.com/alerts/send"; %{constant}
+
+options = weboptions("HeaderFields", ["ThingSpeak-Alerts-API-Key", alertApiKey ]); %{constant}
+channelID = 2549509;
+
+alertApiKey = 'TAK+o0S65JNtOAv+OMh';
+
+alertUrl="https://api.thingspeak.com/alerts/send";
+
+options = weboptions("HeaderFields", ["ThingSpeak-Alerts-API-Key", alertApiKey ]);
+
+alertSubject = sprintf("Earthquake Warning!");
+
+vibData = thingSpeakRead(channelID,'NumDays',30,'Fields',1);
+
+if isempty(vibData)
+    alertBody = ' No data read from plant. ';      
+else
+    span = max(vibData);
+
+    if (span >= 0.1 && span < 0.2)
+        alertBody = ' Slight Tremors in Sucat Area. ';
+    elseif (span >= 0.2 && span < 0.5)
+        alertBody = ' Considerable Shaking in your Sucat Area! ';
+    elseif (span >= 0.5)
+        alertBody = 'Significant Earthquake near Sucat Area! Please Evacuate Immediately!';
+    end
+end
+ 
+try
+    webwrite(alertUrl , "body", alertBody, "subject", alertSubject, options);
+catch someException
+    fprintf("Failed to send alert: %s\n", someException.message);
+end
+
